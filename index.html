@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Property Data</title>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            margin: 0;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+        }
+
+        h1 {
+            text-align: center;
+            color: #1f2937;
+            font-size: 2.25rem;
+            margin-bottom: 1.5rem;
+        }
+
+        #search-container {
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        #search-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        #search-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1.5rem;
+            font-size: 0.875rem;
+        }
+
+        th, td {
+            border: 1px solid #e5e7eb;
+            padding: 0.75rem;
+            text-align: left;
+            white-space: nowrap;
+        }
+
+        th {
+            background-color: #f9fafb;
+            color: #4b5563;
+            font-weight: 600;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9fafb;
+        }
+
+        tr:hover {
+            background-color: #eff6ff;
+        }
+
+        #loading {
+            text-align: center;
+            font-size: 1.25rem;
+            color: #6b7280;
+            margin-top: 2rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Property Data</h1>
+        <div id="search-container">
+            <input type="text" id="search-input" placeholder="Search by name, address, etc...">
+        </div>
+        
+        <p id="loading">Loading data...</p>
+
+        <div class="table-responsive">
+            <table id="data-table">
+                <thead>
+                    <tr>
+                        <th data-column="COGNOME">COGNOME</th>
+                        <th data-column="NOME">NOME</th>
+                        <th data-column="SCALA">SCALA</th>
+                        <th data-column="POSTA">POSTA</th>
+                        <th data-column="INTERNO">INTERNO</th>
+                        <th data-column="PIANO">PIANO</th>
+                        <th data-column="CITOFONO">CITOFONO</th>
+                        <th data-column="RACC">RACC</th>
+                        <th data-column="INF">INF</th>
+                        <th data-column="BOX">BOX</th>
+                        <th data-column="CANTINA">CANTINA</th>
+                        <th data-column="CELLULARE">CELLULARE</th>
+                    </tr>
+                </thead>
+                <tbody id="data-table-body">
+                    <!-- Data will be dynamically inserted here by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Your API URL from the Render service
+            const api_url = 'https://aldomoro-backend-api.onrender.com/data';
+            
+            const dataTableBody = document.getElementById('data-table-body');
+            const searchInput = document.getElementById('search-input');
+            const loadingMessage = document.getElementById('loading');
+            let allData = []; // To hold the full dataset for filtering
+
+            // Function to fetch data from the API and handle errors
+            async function fetchData() {
+                try {
+                    const response = await fetch(api_url);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    const data = await response.json();
+                    allData = data; // Store the full dataset
+                    renderTable(allData); // Render the table with all data initially
+                    loadingMessage.style.display = 'none'; // Hide the loading message
+                } catch (error) {
+                    console.error('Could not fetch data:', error);
+                    loadingMessage.textContent = 'Failed to load data. Please check the API URL and try again later.';
+                    loadingMessage.style.color = '#dc2626'; // Red color for error message
+                }
+            }
+
+            // Function to render the table with the provided data array
+            function renderTable(data) {
+                dataTableBody.innerHTML = ''; // Clear the table body
+                if (data.length === 0) {
+                    dataTableBody.innerHTML = '<tr><td colspan="12" style="text-align:center;">No matching data found.</td></tr>';
+                    return;
+                }
+
+                data.forEach(item => {
+                    const row = document.createElement('tr');
+                    const columns = [
+                        'COGNOME', 'NOME', 'SCALA', 'POSTA', 'INTERNO', 'PIANO', 'CITOFONO', 'RACC', 'INF', 'BOX', 'CANTINA', 'CELLULARE'
+                    ];
+                    
+                    columns.forEach(column => {
+                        const cell = document.createElement('td');
+                        cell.textContent = item[column] !== undefined && item[column] !== null ? item[column] : '';
+                        row.appendChild(cell);
+                    });
+
+                    dataTableBody.appendChild(row);
+                });
+            }
+
+            // Function to filter the data based on user input in the search box
+            function filterData() {
+                const query = searchInput.value.toLowerCase().trim();
+                const filteredData = allData.filter(item => {
+                    return Object.values(item).some(value => {
+                        if (value === null || value === undefined) return false;
+                        return String(value).toLowerCase().includes(query);
+                    });
+                });
+                renderTable(filteredData);
+            }
+
+            // Add an event listener to the search input for real-time filtering
+            searchInput.addEventListener('input', filterData);
+
+            // Fetch data when the page first loads
+            fetchData();
+        });
+    </script>
+
+</body>
+</html>
