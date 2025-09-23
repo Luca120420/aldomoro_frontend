@@ -278,19 +278,20 @@
             line-height: 1.2;
         }
 
-        /* Balanced column widths */
-        th:nth-child(1) { width: 12%; } /* Cognome */
-        th:nth-child(2) { width: 12%; } /* Nome */
-        th:nth-child(3) { width: 6%; }  /* Scala */
-        th:nth-child(4) { width: 6%; }  /* Posta */
-        th:nth-child(5) { width: 8%; }  /* Interno */
-        th:nth-child(6) { width: 6%; }  /* Piano */
-        th:nth-child(7) { width: 8%; }  /* Citofono */
-        th:nth-child(8) { width: 6%; }  /* Racc */
-        th:nth-child(9) { width: 5%; }  /* Inf */
-        th:nth-child(10) { width: 6%; } /* Box */
-        th:nth-child(11) { width: 8%; } /* Cantina */
-        th:nth-child(12) { width: 17%; } /* Cellulare */
+        /* Updated column widths to accommodate TELEFONO field */
+        th:nth-child(1) { width: 11%; } /* Cognome */
+        th:nth-child(2) { width: 11%; } /* Nome */
+        th:nth-child(3) { width: 5%; }  /* Scala */
+        th:nth-child(4) { width: 5%; }  /* Posta */
+        th:nth-child(5) { width: 7%; }  /* Interno */
+        th:nth-child(6) { width: 5%; }  /* Piano */
+        th:nth-child(7) { width: 7%; }  /* Citofono */
+        th:nth-child(8) { width: 5%; }  /* Racc */
+        th:nth-child(9) { width: 4%; }  /* Inf */
+        th:nth-child(10) { width: 5%; } /* Box */
+        th:nth-child(11) { width: 7%; } /* Cantina */
+        th:nth-child(12) { width: 15%; } /* Telefono */
+        th:nth-child(13) { width: 15%; } /* Cellulare */
 
         td {
             padding: 0.9rem 0.4rem;
@@ -423,7 +424,7 @@
 
             table {
                 table-layout: auto;
-                min-width: 800px;
+                min-width: 900px; /* Increased to accommodate new column */
             }
 
             th, td {
@@ -549,6 +550,7 @@
                                 <th data-column="INF">Inf.</th>
                                 <th data-column="BOX">Box</th>
                                 <th data-column="CANTINA">Cantina</th>
+                                <th data-column="TELEFONO">Telefono</th>
                                 <th data-column="CELLULARE">Cellulare</th>
                             </tr>
                         </thead>
@@ -751,7 +753,7 @@
                 if (data.length === 0) {
                     dataTableBody.innerHTML = `
                         <tr>
-                            <td colspan="12" class="no-results">
+                            <td colspan="13" class="no-results">
                                 <div class="no-results-icon">🔍</div>
                                 <strong>Nessun risultato trovato</strong><br>
                                 <small>Prova a modificare i termini di ricerca</small>
@@ -765,7 +767,7 @@
                     const row = document.createElement('tr');
                     const columns = [
                         'COGNOME', 'NOME', 'SCALA', 'POSTA', 'INTERNO', 'PIANO', 
-                        'CITOFONO', 'RACC', 'INF', 'BOX', 'CANTINA', 'CELLULARE'
+                        'CITOFONO', 'RACC', 'INF', 'BOX', 'CANTINA', 'TELEFONO', 'CELLULARE'
                     ];
                     
                     columns.forEach((column, index) => {
@@ -776,7 +778,7 @@
                         // Aggiungi classi speciali per migliorare la leggibilità
                         if (column === 'COGNOME' || column === 'NOME') {
                             cell.classList.add('name-column');
-                        } else if (column === 'CELLULARE') {
+                        } else if (column === 'CELLULARE' || column === 'TELEFONO') {
                             cell.classList.add('phone-column');
                         } else if (['SCALA', 'INTERNO', 'PIANO'].includes(column)) {
                             cell.classList.add('unit-column');
