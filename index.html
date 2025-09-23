@@ -34,6 +34,12 @@
             border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
+        .login-container {
+            max-width: 450px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
         .header {
             text-align: center;
             margin-bottom: 2.5rem;
@@ -65,6 +71,102 @@
             font-size: 1.1rem;
             font-weight: 400;
             margin-top: 0.5rem;
+        }
+
+        .login-form {
+            background: #ffffff;
+            padding: 2.5rem;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e2e8f0;
+            margin-bottom: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #374151;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 400;
+            background: #ffffff;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .form-group input[type="password"] {
+            font-family: 'Inter', monospace;
+        }
+
+        .login-button {
+            width: 100%;
+            padding: 1rem 2rem;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .login-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .login-button:active {
+            transform: translateY(0);
+        }
+
+        .login-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .logout-section {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .logout-button {
+            padding: 0.5rem 1.5rem;
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .logout-button:hover {
+            background: #dc2626;
+            transform: translateY(-1px);
         }
 
         .search-section {
@@ -260,6 +362,22 @@
             opacity: 0.5;
         }
 
+        .login-error {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #dc2626;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+
+        /* Hidden sections */
+        .hidden {
+            display: none !important;
+        }
+
         /* Mobile Responsiveness */
         @media (max-width: 1200px) {
             .container {
@@ -286,6 +404,10 @@
                 padding: 1rem;
                 border-radius: 16px;
                 width: 98vw;
+            }
+
+            .login-form {
+                padding: 2rem;
             }
 
             .stats-bar {
@@ -348,57 +470,92 @@
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1>Condominio Aldo Moro</h1>
-            <p class="subtitle">Gestione Dati Residenti</p>
-        </div>
-        
-        <div class="search-section">
-            <div class="search-container">
-                <span class="search-icon">🔍</span>
-                <input type="text" id="search-input" placeholder="Cerca per nome, cognome, indirizzo, telefono...">
+        <!-- Login Section -->
+        <div id="login-section">
+            <div class="header">
+                <h1>Condominio Aldo Moro</h1>
+                <p class="subtitle">Accesso Sistema Gestione Residenti</p>
+            </div>
+            
+            <div class="login-container">
+                <form id="login-form" class="login-form">
+                    <div id="login-error" class="login-error hidden"></div>
+                    
+                    <div class="form-group">
+                        <label for="db-username">Username Database:</label>
+                        <input type="text" id="db-username" name="db_username" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="db-password">Password Database:</label>
+                        <input type="password" id="db-password" name="db_password" required>
+                    </div>
+                    
+                    <button type="submit" class="login-button">
+                        <span id="login-btn-text">Accedi</span>
+                    </button>
+                </form>
             </div>
         </div>
 
-        <div class="stats-bar" id="stats-bar" style="display: none;">
-            <div class="stat-item">
-                <span>📊 Totale residenti:</span>
-                <span class="stat-number" id="total-count">0</span>
+        <!-- Main Application Section -->
+        <div id="main-section" class="hidden">
+            <div class="header">
+                <h1>Condominio Aldo Moro</h1>
+                <p class="subtitle">Gestione Dati Residenti</p>
             </div>
-            <div class="stat-item">
-                <span>👁️ Visualizzati:</span>
-                <span class="stat-number" id="visible-count">0</span>
+            
+            <div class="logout-section">
+                <button id="logout-button" class="logout-button">Disconnetti</button>
             </div>
-        </div>
-        
-        <div id="loading" class="loading">
-            <span class="loading-spinner"></span>
-            Caricamento dati in corso...
-        </div>
+            
+            <div class="search-section">
+                <div class="search-container">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="search-input" placeholder="Cerca per nome, cognome, indirizzo, telefono...">
+                </div>
+            </div>
 
-        <div class="table-container" id="table-container" style="display: none;">
-            <div class="table-responsive">
-                <table id="data-table">
-                    <thead>
-                        <tr>
-                            <th data-column="COGNOME">Cognome</th>
-                            <th data-column="NOME">Nome</th>
-                            <th data-column="SCALA">Scala</th>
-                            <th data-column="POSTA">Posta</th>
-                            <th data-column="INTERNO">Interno</th>
-                            <th data-column="PIANO">Piano</th>
-                            <th data-column="CITOFONO">Citofono</th>
-                            <th data-column="RACC">Racc.</th>
-                            <th data-column="INF">Inf.</th>
-                            <th data-column="BOX">Box</th>
-                            <th data-column="CANTINA">Cantina</th>
-                            <th data-column="CELLULARE">Cellulare</th>
-                        </tr>
-                    </thead>
-                    <tbody id="data-table-body">
-                        <!-- I dati verranno inseriti dinamicamente qui -->
-                    </tbody>
-                </table>
+            <div class="stats-bar" id="stats-bar" style="display: none;">
+                <div class="stat-item">
+                    <span>📊 Totale residenti:</span>
+                    <span class="stat-number" id="total-count">0</span>
+                </div>
+                <div class="stat-item">
+                    <span>👁️ Visualizzati:</span>
+                    <span class="stat-number" id="visible-count">0</span>
+                </div>
+            </div>
+            
+            <div id="loading" class="loading hidden">
+                <span class="loading-spinner"></span>
+                Caricamento dati in corso...
+            </div>
+
+            <div class="table-container" id="table-container" style="display: none;">
+                <div class="table-responsive">
+                    <table id="data-table">
+                        <thead>
+                            <tr>
+                                <th data-column="COGNOME">Cognome</th>
+                                <th data-column="NOME">Nome</th>
+                                <th data-column="SCALA">Scala</th>
+                                <th data-column="POSTA">Posta</th>
+                                <th data-column="INTERNO">Interno</th>
+                                <th data-column="PIANO">Piano</th>
+                                <th data-column="CITOFONO">Citofono</th>
+                                <th data-column="RACC">Racc.</th>
+                                <th data-column="INF">Inf.</th>
+                                <th data-column="BOX">Box</th>
+                                <th data-column="CANTINA">Cantina</th>
+                                <th data-column="CELLULARE">Cellulare</th>
+                            </tr>
+                        </thead>
+                        <tbody id="data-table-body">
+                            <!-- I dati verranno inseriti dinamicamente qui -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
@@ -407,6 +564,15 @@
         document.addEventListener('DOMContentLoaded', () => {
             // URL API del servizio Render
             const api_url = 'https://aldomoro-backend-api.onrender.com/data';
+            
+            // Elements
+            const loginSection = document.getElementById('login-section');
+            const mainSection = document.getElementById('main-section');
+            const loginForm = document.getElementById('login-form');
+            const loginError = document.getElementById('login-error');
+            const loginButton = document.querySelector('.login-button');
+            const loginBtnText = document.getElementById('login-btn-text');
+            const logoutButton = document.getElementById('logout-button');
             
             const dataTableBody = document.getElementById('data-table-body');
             const searchInput = document.getElementById('search-input');
@@ -418,20 +584,126 @@
             
             let allData = []; // Array per contenere tutti i dati
             let filteredData = []; // Array per i dati filtrati
+            let currentCredentials = null; // Store current login credentials
 
-            // Funzione per recuperare i dati dall'API e gestire gli errori
-            async function fetchData() {
+            // Show error message
+            function showLoginError(message) {
+                loginError.textContent = message;
+                loginError.classList.remove('hidden');
+            }
+
+            // Hide error message
+            function hideLoginError() {
+                loginError.classList.add('hidden');
+            }
+
+            // Set login button loading state
+            function setLoginLoading(loading) {
+                loginButton.disabled = loading;
+                if (loading) {
+                    loginBtnText.innerHTML = '<span class="loading-spinner"></span> Connessione...';
+                } else {
+                    loginBtnText.textContent = 'Accedi';
+                }
+            }
+
+            // Handle login form submission
+            loginForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                hideLoginError();
+                
+                const username = document.getElementById('db-username').value.trim();
+                const password = document.getElementById('db-password').value.trim();
+                
+                if (!username || !password) {
+                    showLoginError('Inserisci username e password.');
+                    return;
+                }
+
+                setLoginLoading(true);
+                
                 try {
-                    const response = await fetch(api_url);
+                    const response = await fetch(`${api_url}?db_username=${encodeURIComponent(username)}&db_password=${encodeURIComponent(password)}`);
+                    
                     if (!response.ok) {
-                        throw new Error(`Errore HTTP! status: ${response.status}`);
+                        const errorData = await response.json();
+                        throw new Error(errorData.error || `HTTP Error: ${response.status}`);
                     }
+                    
+                    const data = await response.json();
+                    
+                    // Store credentials and data
+                    currentCredentials = { username, password };
+                    allData = data;
+                    filteredData = [...data];
+                    
+                    // Switch to main view
+                    loginSection.classList.add('hidden');
+                    mainSection.classList.remove('hidden');
+                    
+                    // Initialize main application
+                    renderTable(filteredData);
+                    updateStats();
+                    statsBar.style.display = 'flex';
+                    tableContainer.style.display = 'block';
+                    
+                } catch (error) {
+                    console.error('Login error:', error);
+                    if (error.message.includes('Authentication failed') || error.message.includes('401')) {
+                        showLoginError('Credenziali non valide. Verifica username e password.');
+                    } else if (error.message.includes('Could not connect')) {
+                        showLoginError('Impossibile connettersi al database. Verifica la connessione internet.');
+                    } else {
+                        showLoginError(`Errore di connessione: ${error.message}`);
+                    }
+                } finally {
+                    setLoginLoading(false);
+                }
+            });
+
+            // Handle logout
+            logoutButton.addEventListener('click', () => {
+                // Clear data and credentials
+                allData = [];
+                filteredData = [];
+                currentCredentials = null;
+                
+                // Clear form
+                document.getElementById('db-username').value = '';
+                document.getElementById('db-password').value = '';
+                hideLoginError();
+                
+                // Switch back to login view
+                mainSection.classList.add('hidden');
+                loginSection.classList.remove('hidden');
+                
+                // Hide main application elements
+                statsBar.style.display = 'none';
+                tableContainer.style.display = 'none';
+                loadingMessage.classList.add('hidden');
+            });
+
+            // Funzione per recuperare i dati dall'API
+            async function fetchData() {
+                if (!currentCredentials) return;
+                
+                try {
+                    loadingMessage.classList.remove('hidden');
+                    tableContainer.style.display = 'none';
+                    
+                    const response = await fetch(`${api_url}?db_username=${encodeURIComponent(currentCredentials.username)}&db_password=${encodeURIComponent(currentCredentials.password)}`);
+                    
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error || `HTTP Error: ${response.status}`);
+                    }
+                    
                     const data = await response.json();
                     allData = data;
                     filteredData = [...data];
                     renderTable(filteredData);
                     updateStats();
-                    loadingMessage.style.display = 'none';
+                    loadingMessage.classList.add('hidden');
                     tableContainer.style.display = 'block';
                     statsBar.style.display = 'flex';
                 } catch (error) {
@@ -439,8 +711,8 @@
                     loadingMessage.innerHTML = `
                         <div class="error-message">
                             <strong>⚠️ Errore nel caricamento dei dati</strong><br>
-                            Verificare la connessione internet e riprovare più tardi.<br>
-                            <small>Dettagli tecnici: ${error.message}</small>
+                            ${error.message}<br>
+                            <button onclick="location.reload()" style="margin-top: 1rem; padding: 0.5rem 1rem; background: #667eea; color: white; border: none; border-radius: 8px; cursor: pointer;">Riprova</button>
                         </div>
                     `;
                 }
@@ -516,11 +788,11 @@
                 updateStats();
             }
 
-            // Aggiungi listener per la ricerca in tempo reale
+            // Add search listener
             searchInput.addEventListener('input', filterData);
 
-            // Recupera i dati quando la pagina viene caricata per la prima volta
-            fetchData();
+            // Focus on username input when page loads
+            document.getElementById('db-username').focus();
         });
     </script>
 </body>
