@@ -673,7 +673,7 @@
                     } else if (error.message.includes('Could not connect') || error.message.includes('NetworkError') || error.message.includes('Failed to fetch')) {
                         showLoginError('Impossibile connettersi al server. Verifica la connessione internet.');
                     } else {
-                        showLoginError(`Errore: ${error.message}`);
+                        showLoginError(`Errore: Controlla username e password.`);
                     }
                 } finally {
                     setLoginLoading(false);
