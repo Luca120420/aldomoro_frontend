@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Condominio Aldo Moro - Dati Residenti</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 1rem;
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        .container {
+            width: 90vw;
+            max-width: none;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 2.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+            position: relative;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 2px;
+        }
+
+        h1 {
+            color: #1e293b;
+            font-size: clamp(1.8rem, 4vw, 2.75rem);
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.5px;
+        }
+
+        .subtitle {
+            color: #64748b;
+            font-size: 1.1rem;
+            font-weight: 400;
+            margin-top: 0.5rem;
+        }
+
+        .search-section {
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        .search-container {
+            position: relative;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+            font-size: 1.1rem;
+        }
+
+        #search-input {
+            width: 100%;
+            padding: 1rem 1rem 1rem 3rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 400;
+            background: #ffffff;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+        }
+
+        #search-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            transform: translateY(-1px);
+        }
+
+        #search-input::placeholder {
+            color: #9ca3af;
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 2rem;
+            margin: 1.5rem 0;
+            padding: 1rem;
+            background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+            border-radius: 12px;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            color: #475569;
+            font-weight: 500;
+        }
+
+        .stat-number {
+            font-weight: 700;
+            color: #1e293b;
+            font-size: 1.1rem;
+        }
+
+        .table-container {
+            background: #ffffff;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e2e8f0;
+        }
+
+        .table-responsive {
+            overflow-x: visible;
+            max-height: 65vh;
+            overflow-y: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+            table-layout: fixed;
+            min-width: 100%;
+        }
+
+        th {
+            background: linear-gradient(135deg, #1e293b, #334155);
+            color: #ffffff;
+            padding: 0.9rem 0.4rem;
+            text-align: left;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            font-size: 0.75rem;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            border-bottom: 2px solid #475569;
+            line-height: 1.2;
+        }
+
+        /* Balanced column widths */
+        th:nth-child(1) { width: 12%; } /* Cognome */
+        th:nth-child(2) { width: 12%; } /* Nome */
+        th:nth-child(3) { width: 6%; }  /* Scala */
+        th:nth-child(4) { width: 6%; }  /* Posta */
+        th:nth-child(5) { width: 8%; }  /* Interno */
+        th:nth-child(6) { width: 6%; }  /* Piano */
+        th:nth-child(7) { width: 8%; }  /* Citofono */
+        th:nth-child(8) { width: 6%; }  /* Racc */
+        th:nth-child(9) { width: 5%; }  /* Inf */
+        th:nth-child(10) { width: 6%; } /* Box */
+        th:nth-child(11) { width: 8%; } /* Cantina */
+        th:nth-child(12) { width: 17%; } /* Cellulare */
+
+        td {
+            padding: 0.9rem 0.4rem;
+            border-bottom: 1px solid #e2e8f0;
+            color: #374151;
+            font-weight: 400;
+            transition: background-color 0.2s ease;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 0.9rem;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f8fafc;
+        }
+
+        tr:hover {
+            background-color: #e0f2fe;
+            transform: scale(1.001);
+        }
+
+        tr:hover td {
+            color: #0f172a;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: #64748b;
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #e2e8f0;
+            border-radius: 50%;
+            border-top-color: #667eea;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 0.5rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            text-align: center;
+            padding: 2rem;
+            color: #dc2626;
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 12px;
+            margin: 1rem 0;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 3rem;
+            color: #64748b;
+            font-size: 1.1rem;
+        }
+
+        .no-results-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 1200px) {
+            .container {
+                width: 85vw;
+                padding: 2rem;
+            }
+            
+            th, td {
+                padding: 0.8rem 0.3rem;
+                font-size: 0.85rem;
+            }
+            
+            th {
+                font-size: 0.7rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 0.25rem;
+            }
+
+            .container {
+                padding: 1rem;
+                border-radius: 16px;
+                width: 98vw;
+            }
+
+            .stats-bar {
+                gap: 1rem;
+                flex-direction: column;
+            }
+
+            /* Switch to horizontal scroll for mobile */
+            .table-responsive {
+                overflow-x: auto;
+            }
+
+            table {
+                table-layout: auto;
+                min-width: 800px;
+            }
+
+            th, td {
+                padding: 0.75rem 0.5rem;
+                font-size: 0.8rem;
+                white-space: nowrap;
+            }
+
+            th {
+                font-size: 0.7rem;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .stats-bar {
+                gap: 0.5rem;
+            }
+
+            .stat-item {
+                font-size: 0.8rem;
+            }
+
+            th, td {
+                padding: 0.5rem 0.4rem;
+                font-size: 0.75rem;
+            }
+        }
+
+        /* Enhance table columns for better readability */
+        .phone-column {
+            font-weight: 600;
+            color: #059669;
+        }
+
+        .name-column {
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .unit-column {
+            background-color: #f0f9ff;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Condominio Aldo Moro</h1>
+            <p class="subtitle">Gestione Dati Residenti</p>
+        </div>
+        
+        <div class="search-section">
+            <div class="search-container">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="search-input" placeholder="Cerca per nome, cognome, indirizzo, telefono...">
+            </div>
+        </div>
+
+        <div class="stats-bar" id="stats-bar" style="display: none;">
+            <div class="stat-item">
+                <span>📊 Totale residenti:</span>
+                <span class="stat-number" id="total-count">0</span>
+            </div>
+            <div class="stat-item">
+                <span>👁️ Visualizzati:</span>
+                <span class="stat-number" id="visible-count">0</span>
+            </div>
+        </div>
+        
+        <div id="loading" class="loading">
+            <span class="loading-spinner"></span>
+            Caricamento dati in corso...
+        </div>
+
+        <div class="table-container" id="table-container" style="display: none;">
+            <div class="table-responsive">
+                <table id="data-table">
+                    <thead>
+                        <tr>
+                            <th data-column="COGNOME">Cognome</th>
+                            <th data-column="NOME">Nome</th>
+                            <th data-column="SCALA">Scala</th>
+                            <th data-column="POSTA">Posta</th>
+                            <th data-column="INTERNO">Interno</th>
+                            <th data-column="PIANO">Piano</th>
+                            <th data-column="CITOFONO">Citofono</th>
+                            <th data-column="RACC">Racc.</th>
+                            <th data-column="INF">Inf.</th>
+                            <th data-column="BOX">Box</th>
+                            <th data-column="CANTINA">Cantina</th>
+                            <th data-column="CELLULARE">Cellulare</th>
+                        </tr>
+                    </thead>
+                    <tbody id="data-table-body">
+                        <!-- I dati verranno inseriti dinamicamente qui -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // URL API del servizio Render
+            const api_url = 'https://aldomoro-backend-api.onrender.com/data';
+            
+            const dataTableBody = document.getElementById('data-table-body');
+            const searchInput = document.getElementById('search-input');
+            const loadingMessage = document.getElementById('loading');
+            const tableContainer = document.getElementById('table-container');
+            const statsBar = document.getElementById('stats-bar');
+            const totalCount = document.getElementById('total-count');
+            const visibleCount = document.getElementById('visible-count');
+            
+            let allData = []; // Array per contenere tutti i dati
+            let filteredData = []; // Array per i dati filtrati
+
+            // Funzione per recuperare i dati dall'API e gestire gli errori
+            async function fetchData() {
+                try {
+                    const response = await fetch(api_url);
+                    if (!response.ok) {
+                        throw new Error(`Errore HTTP! status: ${response.status}`);
+                    }
+                    const data = await response.json();
+                    allData = data;
+                    filteredData = [...data];
+                    renderTable(filteredData);
+                    updateStats();
+                    loadingMessage.style.display = 'none';
+                    tableContainer.style.display = 'block';
+                    statsBar.style.display = 'flex';
+                } catch (error) {
+                    console.error('Impossibile recuperare i dati:', error);
+                    loadingMessage.innerHTML = `
+                        <div class="error-message">
+                            <strong>⚠️ Errore nel caricamento dei dati</strong><br>
+                            Verificare la connessione internet e riprovare più tardi.<br>
+                            <small>Dettagli tecnici: ${error.message}</small>
+                        </div>
+                    `;
+                }
+            }
+
+            // Funzione per aggiornare le statistiche
+            function updateStats() {
+                totalCount.textContent = allData.length;
+                visibleCount.textContent = filteredData.length;
+            }
+
+            // Funzione per renderizzare la tabella con i dati forniti
+            function renderTable(data) {
+                dataTableBody.innerHTML = '';
+                
+                if (data.length === 0) {
+                    dataTableBody.innerHTML = `
+                        <tr>
+                            <td colspan="12" class="no-results">
+                                <div class="no-results-icon">🔍</div>
+                                <strong>Nessun risultato trovato</strong><br>
+                                <small>Prova a modificare i termini di ricerca</small>
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                data.forEach(item => {
+                    const row = document.createElement('tr');
+                    const columns = [
+                        'COGNOME', 'NOME', 'SCALA', 'POSTA', 'INTERNO', 'PIANO', 
+                        'CITOFONO', 'RACC', 'INF', 'BOX', 'CANTINA', 'CELLULARE'
+                    ];
+                    
+                    columns.forEach((column, index) => {
+                        const cell = document.createElement('td');
+                        const value = item[column];
+                        cell.textContent = (value !== undefined && value !== null && value !== '') ? value : '—';
+                        
+                        // Aggiungi classi speciali per migliorare la leggibilità
+                        if (column === 'COGNOME' || column === 'NOME') {
+                            cell.classList.add('name-column');
+                        } else if (column === 'CELLULARE') {
+                            cell.classList.add('phone-column');
+                        } else if (['SCALA', 'INTERNO', 'PIANO'].includes(column)) {
+                            cell.classList.add('unit-column');
+                        }
+                        
+                        row.appendChild(cell);
+                    });
+
+                    dataTableBody.appendChild(row);
+                });
+            }
+
+            // Funzione per filtrare i dati in base all'input dell'utente
+            function filterData() {
+                const query = searchInput.value.toLowerCase().trim();
+                
+                if (query === '') {
+                    filteredData = [...allData];
+                } else {
+                    filteredData = allData.filter(item => {
+                        return Object.values(item).some(value => {
+                            if (value === null || value === undefined) return false;
+                            return String(value).toLowerCase().includes(query);
+                        });
+                    });
+                }
+                
+                renderTable(filteredData);
+                updateStats();
+            }
+
+            // Aggiungi listener per la ricerca in tempo reale
+            searchInput.addEventListener('input', filterData);
+
+            // Recupera i dati quando la pagina viene caricata per la prima volta
+            fetchData();
+        });
+    </script>
+</body>
+</html>
