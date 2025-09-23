@@ -17,19 +17,20 @@
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            padding: 1rem;
+            padding: 0.5rem;
             line-height: 1.6;
+            margin: 0;
         }
 
         .container {
-            width: 100%;
-            max-width: 1400px;
+            width: 98vw;
+            max-width: none;
             margin: 0 auto;
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
             border-radius: 20px;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            padding: 2.5rem;
+            padding: 2rem;
             border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
@@ -145,37 +146,59 @@
         }
 
         .table-responsive {
-            overflow-x: auto;
-            max-height: 70vh;
+            overflow-x: visible;
+            max-height: 65vh;
+            overflow-y: auto;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
+            table-layout: fixed;
+            min-width: 100%;
         }
 
         th {
             background: linear-gradient(135deg, #1e293b, #334155);
             color: #ffffff;
-            padding: 1rem 0.75rem;
+            padding: 0.8rem 0.3rem;
             text-align: left;
             font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            font-size: 0.8rem;
+            letter-spacing: 0.3px;
+            font-size: 0.7rem;
             position: sticky;
             top: 0;
             z-index: 10;
             border-bottom: 2px solid #475569;
+            line-height: 1.2;
         }
 
+        /* Optimized column widths for maximum space utilization */
+        th:nth-child(1) { width: 13%; } /* Cognome */
+        th:nth-child(2) { width: 13%; } /* Nome */
+        th:nth-child(3) { width: 5%; }  /* Scala */
+        th:nth-child(4) { width: 5%; }  /* Posta */
+        th:nth-child(5) { width: 7%; }  /* Interno */
+        th:nth-child(6) { width: 5%; }  /* Piano */
+        th:nth-child(7) { width: 7%; }  /* Citofono */
+        th:nth-child(8) { width: 5%; }  /* Racc */
+        th:nth-child(9) { width: 4%; }  /* Inf */
+        th:nth-child(10) { width: 5%; } /* Box */
+        th:nth-child(11) { width: 7%; } /* Cantina */
+        th:nth-child(12) { width: 30%; } /* Cellulare */
+
         td {
-            padding: 1rem 0.75rem;
+            padding: 0.8rem 0.3rem;
             border-bottom: 1px solid #e2e8f0;
             color: #374151;
             font-weight: 400;
             transition: background-color 0.2s ease;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 0.85rem;
         }
 
         tr:nth-child(even) {
@@ -238,14 +261,31 @@
         }
 
         /* Mobile Responsiveness */
+        @media (max-width: 1200px) {
+            .container {
+                width: 95vw;
+                padding: 1.5rem;
+            }
+            
+            th, td {
+                padding: 0.7rem 0.25rem;
+                font-size: 0.8rem;
+            }
+            
+            th {
+                font-size: 0.65rem;
+            }
+        }
+
         @media (max-width: 768px) {
             body {
-                padding: 0.5rem;
+                padding: 0.25rem;
             }
 
             .container {
-                padding: 1.5rem;
+                padding: 1rem;
                 border-radius: 16px;
+                width: 98vw;
             }
 
             .stats-bar {
@@ -253,9 +293,20 @@
                 flex-direction: column;
             }
 
+            /* Switch to horizontal scroll for mobile */
+            .table-responsive {
+                overflow-x: auto;
+            }
+
+            table {
+                table-layout: auto;
+                min-width: 800px;
+            }
+
             th, td {
                 padding: 0.75rem 0.5rem;
                 font-size: 0.8rem;
+                white-space: nowrap;
             }
 
             th {
