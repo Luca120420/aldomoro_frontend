@@ -623,14 +623,26 @@
                 setLoginLoading(true);
                 
                 try {
+                    console.log('Attempting login with:', username); // Debug log
                     const response = await fetch(`${api_url}?db_username=${encodeURIComponent(username)}&db_password=${encodeURIComponent(password)}`);
                     
+                    console.log('Response status:', response.status); // Debug log
+                    console.log('Response headers:', response.headers); // Debug log
+                    
                     if (!response.ok) {
-                        const errorData = await response.json();
-                        throw new Error(errorData.error || `HTTP Error: ${response.status}`);
+                        let errorMessage = `HTTP Error: ${response.status}`;
+                        try {
+                            const errorData = await response.json();
+                            errorMessage = errorData.error || errorMessage;
+                            console.log('Error data:', errorData); // Debug log
+                        } catch (parseError) {
+                            console.log('Could not parse error response as JSON'); // Debug log
+                        }
+                        throw new Error(errorMessage);
                     }
                     
                     const data = await response.json();
+                    console.log('Login successful, received', data.length, 'records'); // Debug log
                     
                     // Store credentials and data
                     currentCredentials = { username, password };
@@ -648,13 +660,20 @@
                     tableContainer.style.display = 'block';
                     
                 } catch (error) {
-                    console.error('Login error:', error);
-                    if (error.message.includes('Authentication failed') || error.message.includes('401')) {
+                    console.error('Login error details:', error); // Enhanced debug log
+                    console.error('Error message:', error.message); // Debug log
+                    
+                    // More specific error handling based on HTTP status codes
+                    if (error.message.includes('401')) {
                         showLoginError('Credenziali non valide. Verifica username e password.');
-                    } else if (error.message.includes('Could not connect')) {
-                        showLoginError('Impossibile connettersi al database. Verifica la connessione internet.');
+                    } else if (error.message.includes('400')) {
+                        showLoginError('Richiesta non valida. Assicurati che username e password siano stati inseriti.');
+                    } else if (error.message.includes('500')) {
+                        showLoginError('Errore del server. Verifica le credenziali e riprova.');
+                    } else if (error.message.includes('Could not connect') || error.message.includes('NetworkError') || error.message.includes('Failed to fetch')) {
+                        showLoginError('Impossibile connettersi al server. Verifica la connessione internet.');
                     } else {
-                        showLoginError(`Errore di connessione: ${error.message}`);
+                        showLoginError(`Errore: ${error.message}`);
                     }
                 } finally {
                     setLoginLoading(false);
