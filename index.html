@@ -148,26 +148,52 @@
             transform: none;
         }
 
-        .logout-section {
-            text-align: center;
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
             margin-bottom: 1.5rem;
+            flex-wrap: wrap;
         }
 
-        .logout-button {
+        .logout-button, .print-button {
             padding: 0.5rem 1.5rem;
-            background: #ef4444;
-            color: white;
             border: none;
             border-radius: 8px;
             font-size: 0.9rem;
             font-weight: 500;
             cursor: pointer;
             transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logout-button {
+            background: #ef4444;
+            color: white;
         }
 
         .logout-button:hover {
             background: #dc2626;
             transform: translateY(-1px);
+        }
+
+        .print-button {
+            background: #10b981;
+            color: white;
+        }
+
+        .print-button:hover {
+            background: #059669;
+            transform: translateY(-1px);
+        }
+
+        .print-button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
         }
 
         .search-section {
@@ -380,6 +406,121 @@
             display: none !important;
         }
 
+        /* Print styles */
+        @media print {
+            body {
+                background: none !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                font-size: 12px !important;
+            }
+
+            .container {
+                background: none !important;
+                box-shadow: none !important;
+                border: none !important;
+                border-radius: 0 !important;
+                padding: 20px !important;
+                width: 100% !important;
+                max-width: none !important;
+            }
+
+            .action-buttons,
+            .search-section,
+            .stats-bar {
+                display: none !important;
+            }
+
+            .header {
+                margin-bottom: 1rem !important;
+                page-break-after: avoid;
+            }
+
+            .header::before {
+                display: none !important;
+            }
+
+            h1 {
+                font-size: 24px !important;
+                color: #000 !important;
+                margin-bottom: 0.5rem !important;
+            }
+
+            .subtitle {
+                font-size: 14px !important;
+                color: #666 !important;
+                margin-bottom: 1rem !important;
+            }
+
+            .table-container {
+                background: none !important;
+                box-shadow: none !important;
+                border: 1px solid #000 !important;
+                border-radius: 0 !important;
+            }
+
+            .table-responsive {
+                overflow: visible !important;
+                max-height: none !important;
+            }
+
+            table {
+                width: 100% !important;
+                font-size: 10px !important;
+                border-collapse: collapse !important;
+                table-layout: auto !important;
+                min-width: auto !important;
+            }
+
+            th {
+                background: #f0f0f0 !important;
+                color: #000 !important;
+                border: 1px solid #000 !important;
+                padding: 8px 4px !important;
+                font-size: 10px !important;
+                font-weight: bold !important;
+                text-transform: uppercase !important;
+                position: static !important;
+            }
+
+            td {
+                border: 1px solid #000 !important;
+                padding: 6px 4px !important;
+                font-size: 9px !important;
+                color: #000 !important;
+                background: none !important;
+                white-space: nowrap !important;
+                overflow: hidden !important;
+                text-overflow: ellipsis !important;
+            }
+
+            tr:nth-child(even) {
+                background: #f9f9f9 !important;
+            }
+
+            tr:hover {
+                background: none !important;
+                transform: none !important;
+            }
+
+            .print-info {
+                display: block !important;
+                text-align: center;
+                margin-bottom: 1rem;
+                font-size: 12px;
+                color: #666;
+            }
+
+            .page-break {
+                page-break-before: always;
+            }
+        }
+
+        /* Print info (hidden by default, shown in print) */
+        .print-info {
+            display: none;
+        }
+
         /* Mobile Responsiveness */
         @media (max-width: 1200px) {
             .container {
@@ -410,6 +551,16 @@
 
             .login-form {
                 padding: 2rem;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .logout-button, .print-button {
+                width: 100%;
+                justify-content: center;
             }
 
             .stats-bar {
@@ -507,8 +658,22 @@
                 <p class="subtitle">Gestione Dati Residenti</p>
             </div>
             
-            <div class="logout-section">
-                <button id="logout-button" class="logout-button">Disconnetti</button>
+            <!-- Print info (only visible when printing) -->
+            <div class="print-info">
+                <p>Data di stampa: <span id="print-date"></span></p>
+                <p>Filtro applicato: <span id="print-filter"></span></p>
+                <p>Totale record visualizzati: <span id="print-count"></span></p>
+            </div>
+            
+            <div class="action-buttons">
+                <button id="logout-button" class="logout-button">
+                    <span>🚪</span>
+                    Disconnetti
+                </button>
+                <button id="print-button" class="print-button">
+                    <span>🖨️</span>
+                    Stampa Tabella
+                </button>
             </div>
             
             <div class="search-section">
@@ -576,6 +741,7 @@
             const loginButton = document.querySelector('.login-button');
             const loginBtnText = document.getElementById('login-btn-text');
             const logoutButton = document.getElementById('logout-button');
+            const printButton = document.getElementById('print-button');
             
             const dataTableBody = document.getElementById('data-table-body');
             const searchInput = document.getElementById('search-input');
@@ -608,6 +774,34 @@
                 } else {
                     loginBtnText.textContent = 'Accedi';
                 }
+            }
+
+            // Handle print functionality
+            function handlePrint() {
+                // Update print information
+                const printDate = document.getElementById('print-date');
+                const printFilter = document.getElementById('print-filter');
+                const printCount = document.getElementById('print-count');
+                
+                const now = new Date();
+                printDate.textContent = now.toLocaleDateString('it-IT') + ' alle ' + now.toLocaleTimeString('it-IT');
+                
+                const currentFilter = searchInput.value.trim();
+                printFilter.textContent = currentFilter || 'Nessun filtro applicato (tutti i record)';
+                printCount.textContent = filteredData.length;
+                
+                // Disable print button temporarily
+                printButton.disabled = true;
+                printButton.innerHTML = '<span>⏳</span> Preparazione...';
+                
+                // Small delay to ensure DOM updates are complete
+                setTimeout(() => {
+                    window.print();
+                    
+                    // Re-enable print button
+                    printButton.disabled = false;
+                    printButton.innerHTML = '<span>🖨️</span> Stampa Tabella';
+                }, 100);
             }
 
             // Handle login form submission
@@ -704,6 +898,9 @@
                 tableContainer.style.display = 'none';
                 loadingMessage.classList.add('hidden');
             });
+
+            // Handle print button
+            printButton.addEventListener('click', handlePrint);
 
             // Funzione per recuperare i dati dall'API
             async function fetchData() {
@@ -815,6 +1012,32 @@
 
             // Focus on username input when page loads
             document.getElementById('db-username').focus();
+
+            // Add keyboard shortcuts
+            document.addEventListener('keydown', (e) => {
+                // Ctrl/Cmd + P for print
+                if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
+                    e.preventDefault();
+                    if (!mainSection.classList.contains('hidden') && filteredData.length > 0) {
+                        handlePrint();
+                    }
+                }
+                
+                // ESC to focus search
+                if (e.key === 'Escape' && !mainSection.classList.contains('hidden')) {
+                    searchInput.focus();
+                    searchInput.select();
+                }
+            });
+
+            // Add print event listeners for better user experience
+            window.addEventListener('beforeprint', () => {
+                document.body.classList.add('printing');
+            });
+
+            window.addEventListener('afterprint', () => {
+                document.body.classList.remove('printing');
+            });
         });
     </script>
 </body>
