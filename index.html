@@ -1288,48 +1288,132 @@
             }
 
             // Handle print functionality
-            function handlePrint() {
-                // Update print information
-                const printDate = document.getElementById('print-date');
-                const printFilter = document.getElementById('print-filter');
-                const printCount = document.getElementById('print-count');
-                const printColumns = document.getElementById('print-columns');
-                const printSort = document.getElementById('print-sort');
-                
-                const now = new Date();
-                printDate.textContent = now.toLocaleDateString('it-IT') + ' alle ' + now.toLocaleTimeString('it-IT');
-                
-                const currentFilter = searchInput.value.trim();
-                printFilter.textContent = currentFilter || 'Nessun filtro applicato (tutti i record)';
-                printCount.textContent = filteredData.length;
-                
-                // Print visible columns
-                const visibleColumnLabels = Array.from(visibleColumns).map(col => columnDefinitions[col]).join(', ');
-                printColumns.textContent = visibleColumnLabels;
-                
-                // Print sort info
-                if (currentSort.column && currentSort.direction) {
-                    const columnLabel = columnDefinitions[currentSort.column];
-                    const directionLabel = currentSort.direction === 'asc' ? 'Crescente' : 'Decrescente';
-                    printSort.textContent = `${columnLabel} (${directionLabel})`;
-                } else {
-                    printSort.textContent = 'Nessun ordinamento applicato';
+            async function handlePrint() {
+                if (filteredData.length === 0) {
+                    alert('Nessun dato da stampare');
+                    return;
                 }
-                
+
                 // Disable print button temporarily
                 printButton.disabled = true;
                 printButton.innerHTML = '<span>⏳</span> Preparazione...';
                 
-                // Small delay to ensure DOM updates are complete
-                setTimeout(() => {
-                    window.print();
+                try {
+                    // Prepare data with only visible columns
+                    const printData = filteredData.map(row => {
+                        const printRow = {};
+                        Array.from(visibleColumns).forEach(column => {
+                            printRow[columnDefinitions[column]] = row[column] || '';
+                        });
+                        return printRow;
+                    });
+
+                    // Generate PDF for printing
+                    const { jsPDF } = window.jspdf;
+                    const doc = new jsPDF({
+                        orientation: 'landscape',
+                        unit: 'mm',
+                        format: 'a4'
+                    });
+
+                    // Add title
+                    doc.setFontSize(18);
+                    doc.setFont(undefined, 'bold');
+                    doc.text('Condominio Aldo Moro - Dati Residenti', 20, 20);
                     
+                    // Add print information
+                    doc.setFontSize(10);
+                    doc.setFont(undefined, 'normal');
+                    const now = new Date();
+                    doc.text(`Data di stampa: ${now.toLocaleDateString('it-IT')} alle ${now.toLocaleTimeString('it-IT')}`, 20, 30);
+                    
+                    const currentFilter = searchInput.value.trim();
+                    doc.text(`Filtro applicato: ${currentFilter || 'Nessun filtro applicato (tutti i record)'}`, 20, 35);
+                    doc.text(`Totale record visualizzati: ${printData.length}`, 20, 40);
+                    
+                    // Print visible columns info
+                    const visibleColumnLabels = Array.from(visibleColumns).map(col => columnDefinitions[col]).join(', ');
+                    doc.text(`Colonne visibili: ${visibleColumnLabels}`, 20, 45);
+                    
+                    // Print sort info
+                    if (currentSort.column && currentSort.direction) {
+                        const columnLabel = columnDefinitions[currentSort.column];
+                        const directionLabel = currentSort.direction === 'asc' ? 'Crescente' : 'Decrescente';
+                        doc.text(`Ordinamento: ${columnLabel} (${directionLabel})`, 20, 50);
+                    } else {
+                        doc.text('Ordinamento: Nessun ordinamento applicato', 20, 50);
+                    }
+
+                    // Prepare table data
+                    const headers = Object.keys(printData[0]);
+                    const rows = printData.map(row => headers.map(header => row[header] || ''));
+
+                    // Add table with better styling for printing
+                    doc.autoTable({
+                        head: [headers],
+                        body: rows,
+                        startY: 60,
+                        styles: { 
+                            fontSize: 9,
+                            cellPadding: 2.5,
+                            lineColor: [0, 0, 0],
+                            lineWidth: 0.1
+                        },
+                        headStyles: { 
+                            fillColor: [30, 41, 59], 
+                            textColor: [255, 255, 255], 
+                            fontSize: 10,
+                            fontStyle: 'bold',
+                            halign: 'center'
+                        },
+                        bodyStyles: {
+                            textColor: [0, 0, 0],
+                            halign: 'left'
+                        },
+                        alternateRowStyles: { 
+                            fillColor: [248, 250, 252] 
+                        },
+                        margin: { left: 10, right: 10, top: 10, bottom: 10 },
+                        tableLineColor: [0, 0, 0],
+                        tableLineWidth: 0.1,
+                        showHead: 'everyPage'
+                    });
+
+                    // Open PDF in new window and trigger print dialog
+                    const pdfBlob = doc.output('blob');
+                    const pdfUrl = URL.createObjectURL(pdfBlob);
+                    
+                    // Open in new window
+                    const printWindow = window.open(pdfUrl, '_blank');
+                    
+                    if (printWindow) {
+                        printWindow.onload = function() {
+                            // Small delay to ensure PDF is fully loaded
+                            setTimeout(() => {
+                                printWindow.print();
+                                // Clean up URL after a delay
+                                setTimeout(() => {
+                                    URL.revokeObjectURL(pdfUrl);
+                                }, 1000);
+                            }, 500);
+                        };
+                    } else {
+                        // Fallback: download the PDF if popup is blocked
+                        const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+                        doc.save(`Residenti_Aldo_Moro_Stampa_${timestamp}.pdf`);
+                        alert('Il popup è stato bloccato. Il file PDF è stato scaricato per la stampa.');
+                        URL.revokeObjectURL(pdfUrl);
+                    }
+
+                } catch (error) {
+                    console.error('Print error:', error);
+                    alert('Errore durante la preparazione per la stampa: ' + error.message);
+                } finally {
                     // Re-enable print button
                     printButton.disabled = false;
                     printButton.innerHTML = '<span>🖨️</span> Stampa Tabella';
-                }, 100);
+                }
             }
-
             // Handle login form submission
             loginForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
