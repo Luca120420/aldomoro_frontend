@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Condominio Aldo Moro - Dati Residenti</title>
     <link rel="icon" type="image/x-icon" href="logo.ico">
+    <!-- Add external libraries for export functionality -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         
@@ -157,7 +161,7 @@
             flex-wrap: wrap;
         }
 
-        .logout-button, .print-button {
+        .logout-button, .print-button, .export-button, .columns-button {
             padding: 0.5rem 1.5rem;
             border: none;
             border-radius: 8px;
@@ -168,6 +172,7 @@
             display: flex;
             align-items: center;
             gap: 0.5rem;
+            position: relative;
         }
 
         .logout-button {
@@ -190,10 +195,86 @@
             transform: translateY(-1px);
         }
 
-        .print-button:disabled {
+        .export-button {
+            background: #8b5cf6;
+            color: white;
+        }
+
+        .export-button:hover {
+            background: #7c3aed;
+            transform: translateY(-1px);
+        }
+
+        .columns-button {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .columns-button:hover {
+            background: #d97706;
+            transform: translateY(-1px);
+        }
+
+        .print-button:disabled, .export-button:disabled, .columns-button:disabled {
             background: #9ca3af;
             cursor: not-allowed;
             transform: none;
+        }
+
+        /* Dropdown Menus */
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            min-width: 200px;
+            max-height: 300px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .dropdown-menu.show {
+            display: block;
+        }
+
+        .dropdown-item {
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 0.9rem;
+            color: #374151;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .dropdown-item:hover {
+            background-color: #f8fafc;
+        }
+
+        .dropdown-item:last-child {
+            border-bottom: none;
+        }
+
+        /* Column Toggle Specific */
+        .column-toggle-item {
+            justify-content: space-between;
+        }
+
+        .column-toggle-checkbox {
+            width: 16px;
+            height: 16px;
+            accent-color: #667eea;
         }
 
         .search-section {
@@ -302,6 +383,30 @@
             z-index: 10;
             border-bottom: 2px solid #475569;
             line-height: 1.2;
+            cursor: pointer;
+            user-select: none;
+            transition: background-color 0.2s ease;
+        }
+
+        th:hover {
+            background: linear-gradient(135deg, #334155, #475569);
+        }
+
+        th.sortable::after {
+            content: ' ↕️';
+            font-size: 0.8rem;
+            opacity: 0.6;
+            margin-left: 0.25rem;
+        }
+
+        th.sort-asc::after {
+            content: ' ⬆️';
+            opacity: 1;
+        }
+
+        th.sort-desc::after {
+            content: ' ⬇️';
+            opacity: 1;
         }
 
         /* Updated column widths to accommodate TELEFONO field */
@@ -318,6 +423,11 @@
         th:nth-child(11) { width: 7%; } /* Cantina */
         th:nth-child(12) { width: 15%; } /* Telefono */
         th:nth-child(13) { width: 15%; } /* Cellulare */
+
+        /* Hidden columns */
+        .column-hidden {
+            display: none !important;
+        }
 
         td {
             padding: 0.9rem 0.4rem;
@@ -483,6 +593,10 @@
                 position: static !important;
             }
 
+            th::after {
+                display: none !important;
+            }
+
             td {
                 border: 1px solid #000 !important;
                 padding: 6px 4px !important;
@@ -513,6 +627,11 @@
 
             .page-break {
                 page-break-before: always;
+            }
+
+            /* Hide columns that are set to hidden */
+            .column-hidden {
+                display: none !important;
             }
         }
 
@@ -558,7 +677,7 @@
                 gap: 0.5rem;
             }
 
-            .logout-button, .print-button {
+            .logout-button, .print-button, .export-button, .columns-button {
                 width: 100%;
                 justify-content: center;
             }
@@ -586,6 +705,15 @@
 
             th {
                 font-size: 0.7rem;
+            }
+
+            .dropdown-menu {
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                width: 90vw;
+                max-width: 300px;
             }
         }
 
@@ -618,6 +746,25 @@
         .unit-column {
             background-color: #f0f9ff;
             font-weight: 500;
+        }
+
+        /* Export progress indicator */
+        .export-progress {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            z-index: 10000;
+            text-align: center;
+            display: none;
+        }
+
+        .export-progress.show {
+            display: block;
         }
     </style>
 </head>
@@ -663,6 +810,8 @@
                 <p>Data di stampa: <span id="print-date"></span></p>
                 <p>Filtro applicato: <span id="print-filter"></span></p>
                 <p>Totale record visualizzati: <span id="print-count"></span></p>
+                <p>Colonne visibili: <span id="print-columns"></span></p>
+                <p>Ordinamento: <span id="print-sort"></span></p>
             </div>
             
             <div class="action-buttons">
@@ -674,6 +823,41 @@
                     <span>🖨️</span>
                     Stampa Tabella
                 </button>
+                
+                <!-- Export Dropdown -->
+                <div class="dropdown">
+                    <button id="export-button" class="export-button">
+                        <span>📄</span>
+                        Esporta
+                        <span style="font-size: 0.7rem;">▼</span>
+                    </button>
+                    <div id="export-menu" class="dropdown-menu">
+                        <div class="dropdown-item" data-format="pdf">
+                            <span>📄</span>
+                            Esporta PDF
+                        </div>
+                        <div class="dropdown-item" data-format="excel">
+                            <span>📊</span>
+                            Esporta Excel
+                        </div>
+                        <div class="dropdown-item" data-format="csv">
+                            <span>📋</span>
+                            Esporta CSV
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Column Visibility Dropdown -->
+                <div class="dropdown">
+                    <button id="columns-button" class="columns-button">
+                        <span>👁️</span>
+                        Colonne
+                        <span style="font-size: 0.7rem;">▼</span>
+                    </button>
+                    <div id="columns-menu" class="dropdown-menu">
+                        <!-- Will be populated dynamically -->
+                    </div>
+                </div>
             </div>
             
             <div class="search-section">
@@ -692,6 +876,10 @@
                     <span>👁️ Trovati:</span>
                     <span class="stat-number" id="visible-count">0</span>
                 </div>
+                <div class="stat-item">
+                    <span>🔽 Ordinamento:</span>
+                    <span class="stat-number" id="sort-info">Nessuno</span>
+                </div>
             </div>
             
             <div id="loading" class="loading hidden">
@@ -704,19 +892,19 @@
                     <table id="data-table">
                         <thead>
                             <tr>
-                                <th data-column="COGNOME">Cognome</th>
-                                <th data-column="NOME">Nome</th>
-                                <th data-column="SCALA">Scala</th>
-                                <th data-column="POSTA">Posta</th>
-                                <th data-column="INTERNO">Interno</th>
-                                <th data-column="PIANO">Piano</th>
-                                <th data-column="CITOFONO">Citofono</th>
-                                <th data-column="RACC">Racc.</th>
-                                <th data-column="INF">Inf.</th>
-                                <th data-column="BOX">Box</th>
-                                <th data-column="CANTINA">Cantina</th>
-                                <th data-column="TELEFONO">Telefono</th>
-                                <th data-column="CELLULARE">Cellulare</th>
+                                <th data-column="COGNOME" class="sortable">Cognome</th>
+                                <th data-column="NOME" class="sortable">Nome</th>
+                                <th data-column="SCALA" class="sortable">Scala</th>
+                                <th data-column="POSTA" class="sortable">Posta</th>
+                                <th data-column="INTERNO" class="sortable">Interno</th>
+                                <th data-column="PIANO" class="sortable">Piano</th>
+                                <th data-column="CITOFONO" class="sortable">Citofono</th>
+                                <th data-column="RACC" class="sortable">Racc.</th>
+                                <th data-column="INF" class="sortable">Inf.</th>
+                                <th data-column="BOX" class="sortable">Box</th>
+                                <th data-column="CANTINA" class="sortable">Cantina</th>
+                                <th data-column="TELEFONO" class="sortable">Telefono</th>
+                                <th data-column="CELLULARE" class="sortable">Cellulare</th>
                             </tr>
                         </thead>
                         <tbody id="data-table-body">
@@ -726,6 +914,12 @@
                 </div>
             </div>
         </div>
+    </div>
+
+    <!-- Export Progress Indicator -->
+    <div id="export-progress" class="export-progress">
+        <div class="loading-spinner"></div>
+        <p>Preparazione esportazione...</p>
     </div>
 
     <script>
@@ -742,18 +936,335 @@
             const loginBtnText = document.getElementById('login-btn-text');
             const logoutButton = document.getElementById('logout-button');
             const printButton = document.getElementById('print-button');
+            const exportButton = document.getElementById('export-button');
+            const columnsButton = document.getElementById('columns-button');
+            const exportMenu = document.getElementById('export-menu');
+            const columnsMenu = document.getElementById('columns-menu');
+            const exportProgress = document.getElementById('export-progress');
             
             const dataTableBody = document.getElementById('data-table-body');
+            const dataTable = document.getElementById('data-table');
             const searchInput = document.getElementById('search-input');
             const loadingMessage = document.getElementById('loading');
             const tableContainer = document.getElementById('table-container');
             const statsBar = document.getElementById('stats-bar');
             const totalCount = document.getElementById('total-count');
             const visibleCount = document.getElementById('visible-count');
+            const sortInfo = document.getElementById('sort-info');
             
             let allData = []; // Array per contenere tutti i dati
             let filteredData = []; // Array per i dati filtrati
             let currentCredentials = null; // Store current login credentials
+            let currentSort = { column: null, direction: null }; // Current sorting state
+            let visibleColumns = new Set([
+                'COGNOME', 'NOME', 'SCALA', 'POSTA', 'INTERNO', 'PIANO', 
+                'CITOFONO', 'RACC', 'INF', 'BOX', 'CANTINA', 'TELEFONO', 'CELLULARE'
+            ]); // Visible columns set
+
+            // Column definitions for better handling
+            const columnDefinitions = {
+                'COGNOME': 'Cognome',
+                'NOME': 'Nome',
+                'SCALA': 'Scala',
+                'POSTA': 'Posta',
+                'INTERNO': 'Interno',
+                'PIANO': 'Piano',
+                'CITOFONO': 'Citofono',
+                'RACC': 'Racc.',
+                'INF': 'Inf.',
+                'BOX': 'Box',
+                'CANTINA': 'Cantina',
+                'TELEFONO': 'Telefono',
+                'CELLULARE': 'Cellulare'
+            };
+
+            // Initialize column visibility menu
+            function initializeColumnMenu() {
+                columnsMenu.innerHTML = '';
+                Object.entries(columnDefinitions).forEach(([key, label]) => {
+                    const item = document.createElement('div');
+                    item.className = 'dropdown-item column-toggle-item';
+                    item.innerHTML = `
+                        <span>${label}</span>
+                        <input type="checkbox" class="column-toggle-checkbox" data-column="${key}" ${visibleColumns.has(key) ? 'checked' : ''}>
+                    `;
+                    
+                    const checkbox = item.querySelector('.column-toggle-checkbox');
+                    checkbox.addEventListener('change', () => toggleColumnVisibility(key, checkbox.checked));
+                    
+                    columnsMenu.appendChild(item);
+                });
+            }
+
+            // Toggle column visibility
+            function toggleColumnVisibility(columnKey, visible) {
+                if (visible) {
+                    visibleColumns.add(columnKey);
+                } else {
+                    visibleColumns.delete(columnKey);
+                }
+                
+                // Update table display
+                updateTableColumnVisibility();
+                
+                // Re-render table to apply changes
+                renderTable(filteredData);
+            }
+
+            // Update table column visibility
+            function updateTableColumnVisibility() {
+                const headers = dataTable.querySelectorAll('th');
+                const rows = dataTable.querySelectorAll('tbody tr');
+                
+                headers.forEach((th, index) => {
+                    const columnKey = th.getAttribute('data-column');
+                    if (columnKey) {
+                        th.classList.toggle('column-hidden', !visibleColumns.has(columnKey));
+                    }
+                });
+                
+                rows.forEach(row => {
+                    const cells = row.querySelectorAll('td');
+                    cells.forEach((td, index) => {
+                        const header = headers[index];
+                        if (header) {
+                            const columnKey = header.getAttribute('data-column');
+                            if (columnKey) {
+                                td.classList.toggle('column-hidden', !visibleColumns.has(columnKey));
+                            }
+                        }
+                    });
+                });
+            }
+
+            // Sorting functionality
+            function sortData(column, direction = null) {
+                if (!direction) {
+                    // Determine direction based on current state
+                    if (currentSort.column === column) {
+                        if (currentSort.direction === 'asc') {
+                            direction = 'desc';
+                        } else if (currentSort.direction === 'desc') {
+                            direction = null; // Remove sorting
+                        } else {
+                            direction = 'asc';
+                        }
+                    } else {
+                        direction = 'asc';
+                    }
+                }
+
+                // Update sort state
+                currentSort = { column: direction ? column : null, direction };
+
+                // Update header classes
+                const headers = dataTable.querySelectorAll('th');
+                headers.forEach(th => {
+                    th.classList.remove('sort-asc', 'sort-desc');
+                    if (th.getAttribute('data-column') === column && direction) {
+                        th.classList.add(direction === 'asc' ? 'sort-asc' : 'sort-desc');
+                    }
+                });
+
+                // Sort the filtered data
+                if (direction) {
+                    filteredData.sort((a, b) => {
+                        let aVal = a[column] || '';
+                        let bVal = b[column] || '';
+                        
+                        // Convert to strings for comparison
+                        aVal = String(aVal).toLowerCase();
+                        bVal = String(bVal).toLowerCase();
+                        
+                        // Try to parse as numbers if possible
+                        const aNum = parseFloat(aVal);
+                        const bNum = parseFloat(bVal);
+                        
+                        if (!isNaN(aNum) && !isNaN(bNum)) {
+                            return direction === 'asc' ? aNum - bNum : bNum - aNum;
+                        }
+                        
+                        // String comparison
+                        if (aVal < bVal) return direction === 'asc' ? -1 : 1;
+                        if (aVal > bVal) return direction === 'asc' ? 1 : -1;
+                        return 0;
+                    });
+                } else {
+                    // Reset to original order (re-filter from allData)
+                    filterData();
+                    return;
+                }
+
+                // Update sort info
+                updateSortInfo();
+                
+                // Re-render table
+                renderTable(filteredData);
+            }
+
+            // Update sort information display
+            function updateSortInfo() {
+                if (currentSort.column && currentSort.direction) {
+                    const columnLabel = columnDefinitions[currentSort.column] || currentSort.column;
+                    const directionLabel = currentSort.direction === 'asc' ? '⬆️' : '⬇️';
+                    sortInfo.textContent = `${columnLabel} ${directionLabel}`;
+                } else {
+                    sortInfo.textContent = 'Nessuno';
+                }
+            }
+
+            // Export functionality
+            async function exportData(format) {
+                if (filteredData.length === 0) {
+                    alert('Nessun dato da esportare');
+                    return;
+                }
+
+                exportProgress.classList.add('show');
+                
+                try {
+                    // Prepare data with only visible columns
+                    const exportData = filteredData.map(row => {
+                        const exportRow = {};
+                        Array.from(visibleColumns).forEach(column => {
+                            exportRow[columnDefinitions[column]] = row[column] || '';
+                        });
+                        return exportRow;
+                    });
+
+                    const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+                    const filename = `Residenti_Aldo_Moro_${timestamp}`;
+
+                    if (format === 'csv') {
+                        exportToCSV(exportData, filename);
+                    } else if (format === 'excel') {
+                        exportToExcel(exportData, filename);
+                    } else if (format === 'pdf') {
+                        await exportToPDF(exportData, filename);
+                    }
+                } catch (error) {
+                    console.error('Export error:', error);
+                    alert('Errore durante l\'esportazione: ' + error.message);
+                } finally {
+                    exportProgress.classList.remove('show');
+                }
+            }
+
+            // Export to CSV
+            function exportToCSV(data, filename) {
+                const headers = Object.keys(data[0]);
+                const csvContent = [
+                    headers.join(','),
+                    ...data.map(row => headers.map(header => `"${row[header]}"`).join(','))
+                ].join('\n');
+                
+                downloadFile(csvContent, `${filename}.csv`, 'text/csv');
+            }
+
+            // Export to Excel
+            function exportToExcel(data, filename) {
+                const ws = XLSX.utils.json_to_sheet(data);
+                const wb = XLSX.utils.book_new();
+                
+                // Set column widths
+                const colWidths = Object.keys(data[0]).map(() => ({ wch: 15 }));
+                ws['!cols'] = colWidths;
+                
+                XLSX.utils.book_append_sheet(wb, ws, 'Residenti');
+                XLSX.writeFile(wb, `${filename}.xlsx`);
+            }
+
+            // Export to PDF
+            async function exportToPDF(data, filename) {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF({
+                    orientation: 'landscape',
+                    unit: 'mm',
+                    format: 'a4'
+                });
+
+                // Add title
+                doc.setFontSize(16);
+                doc.text('Condominio Aldo Moro - Dati Residenti', 20, 20);
+                
+                // Add export info
+                doc.setFontSize(10);
+                const now = new Date();
+                doc.text(`Data esportazione: ${now.toLocaleDateString('it-IT')} alle ${now.toLocaleTimeString('it-IT')}`, 20, 30);
+                
+                const currentFilter = searchInput.value.trim();
+                doc.text(`Filtro applicato: ${currentFilter || 'Nessun filtro applicato'}`, 20, 35);
+                doc.text(`Totale record: ${data.length}`, 20, 40);
+                
+                if (currentSort.column && currentSort.direction) {
+                    const columnLabel = columnDefinitions[currentSort.column];
+                    const directionLabel = currentSort.direction === 'asc' ? 'Crescente' : 'Decrescente';
+                    doc.text(`Ordinamento: ${columnLabel} (${directionLabel})`, 20, 45);
+                }
+
+                // Prepare table data
+                const headers = Object.keys(data[0]);
+                const rows = data.map(row => headers.map(header => row[header] || ''));
+
+                // Add table
+                doc.autoTable({
+                    head: [headers],
+                    body: rows,
+                    startY: 55,
+                    styles: { fontSize: 8, cellPadding: 2 },
+                    headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255] },
+                    alternateRowStyles: { fillColor: [248, 250, 252] },
+                    margin: { left: 10, right: 10 }
+                });
+
+                doc.save(`${filename}.pdf`);
+            }
+
+            // Download helper function
+            function downloadFile(content, filename, contentType) {
+                const blob = new Blob([content], { type: contentType });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+            }
+
+            // Dropdown functionality
+            function setupDropdowns() {
+                // Export dropdown
+                exportButton.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    exportMenu.classList.toggle('show');
+                    columnsMenu.classList.remove('show');
+                });
+
+                // Columns dropdown
+                columnsButton.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    columnsMenu.classList.toggle('show');
+                    exportMenu.classList.remove('show');
+                });
+
+                // Export menu items
+                exportMenu.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('dropdown-item')) {
+                        const format = e.target.getAttribute('data-format');
+                        exportData(format);
+                        exportMenu.classList.remove('show');
+                    }
+                });
+
+                // Close dropdowns when clicking outside
+                document.addEventListener('click', () => {
+                    exportMenu.classList.remove('show');
+                    columnsMenu.classList.remove('show');
+                });
+            }
 
             // Show error message
             function showLoginError(message) {
@@ -782,6 +1293,8 @@
                 const printDate = document.getElementById('print-date');
                 const printFilter = document.getElementById('print-filter');
                 const printCount = document.getElementById('print-count');
+                const printColumns = document.getElementById('print-columns');
+                const printSort = document.getElementById('print-sort');
                 
                 const now = new Date();
                 printDate.textContent = now.toLocaleDateString('it-IT') + ' alle ' + now.toLocaleTimeString('it-IT');
@@ -789,6 +1302,19 @@
                 const currentFilter = searchInput.value.trim();
                 printFilter.textContent = currentFilter || 'Nessun filtro applicato (tutti i record)';
                 printCount.textContent = filteredData.length;
+                
+                // Print visible columns
+                const visibleColumnLabels = Array.from(visibleColumns).map(col => columnDefinitions[col]).join(', ');
+                printColumns.textContent = visibleColumnLabels;
+                
+                // Print sort info
+                if (currentSort.column && currentSort.direction) {
+                    const columnLabel = columnDefinitions[currentSort.column];
+                    const directionLabel = currentSort.direction === 'asc' ? 'Crescente' : 'Decrescente';
+                    printSort.textContent = `${columnLabel} (${directionLabel})`;
+                } else {
+                    printSort.textContent = 'Nessun ordinamento applicato';
+                }
                 
                 // Disable print button temporarily
                 printButton.disabled = true;
@@ -851,8 +1377,10 @@
                     mainSection.classList.remove('hidden');
                     
                     // Initialize main application
+                    initializeColumnMenu();
                     renderTable(filteredData);
                     updateStats();
+                    updateSortInfo();
                     statsBar.style.display = 'flex';
                     tableContainer.style.display = 'block';
                     
@@ -883,6 +1411,7 @@
                 allData = [];
                 filteredData = [];
                 currentCredentials = null;
+                currentSort = { column: null, direction: null };
                 
                 // Clear form
                 document.getElementById('db-username').value = '';
@@ -901,6 +1430,15 @@
 
             // Handle print button
             printButton.addEventListener('click', handlePrint);
+
+            // Add sorting event listeners to table headers
+            dataTable.addEventListener('click', (e) => {
+                const th = e.target.closest('th.sortable');
+                if (th) {
+                    const column = th.getAttribute('data-column');
+                    sortData(column);
+                }
+            });
 
             // Funzione per recuperare i dati dall'API
             async function fetchData() {
@@ -922,6 +1460,7 @@
                     filteredData = [...data];
                     renderTable(filteredData);
                     updateStats();
+                    updateSortInfo();
                     loadingMessage.classList.add('hidden');
                     tableContainer.style.display = 'block';
                     statsBar.style.display = 'flex';
@@ -948,9 +1487,10 @@
                 dataTableBody.innerHTML = '';
                 
                 if (data.length === 0) {
+                    const visibleColumnCount = visibleColumns.size;
                     dataTableBody.innerHTML = `
                         <tr>
-                            <td colspan="13" class="no-results">
+                            <td colspan="${visibleColumnCount}" class="no-results">
                                 <div class="no-results-icon">🔍</div>
                                 <strong>Nessun risultato trovato</strong><br>
                                 <small>Prova a modificare i termini di ricerca</small>
@@ -972,6 +1512,11 @@
                         const value = item[column];
                         cell.textContent = (value !== undefined && value !== null && value !== '') ? value : '—';
                         
+                        // Apply column visibility
+                        if (!visibleColumns.has(column)) {
+                            cell.classList.add('column-hidden');
+                        }
+                        
                         // Aggiungi classi speciali per migliorare la leggibilità
                         if (column === 'COGNOME' || column === 'NOME') {
                             cell.classList.add('name-column');
@@ -986,6 +1531,9 @@
 
                     dataTableBody.appendChild(row);
                 });
+
+                // Update column visibility after rendering
+                updateTableColumnVisibility();
             }
 
             // Funzione per filtrare i dati in base all'input dell'utente
@@ -1003,12 +1551,20 @@
                     });
                 }
                 
-                renderTable(filteredData);
-                updateStats();
+                // Reapply current sorting if any
+                if (currentSort.column && currentSort.direction) {
+                    sortData(currentSort.column, currentSort.direction);
+                } else {
+                    renderTable(filteredData);
+                    updateStats();
+                }
             }
 
             // Add search listener
             searchInput.addEventListener('input', filterData);
+
+            // Initialize dropdowns
+            setupDropdowns();
 
             // Focus on username input when page loads
             document.getElementById('db-username').focus();
@@ -1023,10 +1579,24 @@
                     }
                 }
                 
-                // ESC to focus search
-                if (e.key === 'Escape' && !mainSection.classList.contains('hidden')) {
-                    searchInput.focus();
-                    searchInput.select();
+                // Ctrl/Cmd + E for export menu
+                if ((e.ctrlKey || e.metaKey) && e.key === 'e') {
+                    e.preventDefault();
+                    if (!mainSection.classList.contains('hidden')) {
+                        exportMenu.classList.toggle('show');
+                        columnsMenu.classList.remove('show');
+                    }
+                }
+                
+                // ESC to focus search or close dropdowns
+                if (e.key === 'Escape') {
+                    if (exportMenu.classList.contains('show') || columnsMenu.classList.contains('show')) {
+                        exportMenu.classList.remove('show');
+                        columnsMenu.classList.remove('show');
+                    } else if (!mainSection.classList.contains('hidden')) {
+                        searchInput.focus();
+                        searchInput.select();
+                    }
                 }
             });
 
